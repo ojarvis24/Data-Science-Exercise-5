@@ -12,7 +12,7 @@ output:
 
 
 ```{r setup, include=FALSE}
-#knitr::opts_chunk$set(echo = TRUE, error=TRUE, message=FALSE, warning=FALSE)
+knitr::opts_chunk$set(echo = TRUE, error=TRUE, message=FALSE, warning=FALSE)
 ```
 
 ```{r libraries}
@@ -122,7 +122,7 @@ leafygreens_graph <- leafygreens %>%
   scale_color_viridis()
 ```
 
-```{r}
+```{r, fig.alt= "Interactive figure of the total weight, in pounds, of the different leafy greens grown in Lisa's garden"}
 ggplotly(leafygreens_graph)
 ```
 ```{r}
@@ -142,11 +142,12 @@ covid19_graph <- covid19 %>%
   group_by(state) %>% 
   ggplot(aes(x = date, y = cases, color = state)) +
   geom_line() + 
-  labs(x = "Date" , y = "Number of Cases", title = "Cumulative COVID Cases in Minnesota, Wisconsin, Iowa, North Dakota, 
-and South Dakota")
+  labs(x = "Date", 
+       y = "Number of Cases", 
+       title = "Cumulative COVID Cases in Minnesota, Wisconsin, Iowa, North Dakota, and South Dakota")
 ```
 
-```{r}
+```{r, fig.alt= "Interactive figure of the cumulative number of COVID cases over time in Iowa, Minnesota, North Dakota, South Dakota, and Wisconsin"}
 ggplotly(covid19_graph)
 ```
 
@@ -160,8 +161,8 @@ trains_national <- small_trains %>%
   summarise(departure_station, arrival_station, total_num_trips, year, month)
 ```
 
-```{r}
-parislyon <- trains_national %>% 
+```{r, eval=FALSE}
+trains_national %>% 
   ggplot(aes(x = month, y = total_num_trips, color = arrival_station)) + 
   geom_line() +
   labs(title = "Where do trains from the Paris Lyon station travel to the most internationally?",
@@ -170,14 +171,12 @@ parislyon <- trains_national %>%
        y = "Number of trips", 
        color='Arrival Station') +
   scale_x_continuous(breaks= pretty_breaks()) +
-  transition_states(year) 
-```
+  transition_states(year)
 
-```{r}
 anim_save("parislyon.gif")
 ```
 
-```{r}
+```{r, fig.alt= "Animated figure of the number of international trips leaving from the Paris Lyon station and going to different arrival stations over the course of a year and then animated to change to different years"}
 knitr::include_graphics("parislyon.gif")
 ```
 
@@ -189,7 +188,7 @@ knitr::include_graphics("parislyon.gif")
   * Use the data you just made to create a static cumulative harvest area plot, with the areas filled with different colors for each variety and arranged (HINT: `fct_reorder()`) from most to least harvested weights (most on the bottom).  
   * Add animation to reveal the plot over date. Instead of having a legend, place the variety names directly on the graph (refer back to the tutorial for how to do this).
 
-```{r}
+```{r, eval=FALSE}
 garden_harvest %>% 
   filter(vegetable == "tomatoes") %>% 
   group_by(date, variety) %>% 
@@ -197,9 +196,28 @@ garden_harvest %>%
   ungroup() %>% 
   complete(variety, 
            date, 
-           fill = list(daily_harvest_lb = 0)) 
+           fill = list(daily_harvest_lb = 0)) %>% 
+  mutate(variety = fct_reorder(variety, daily_harvest_lb, .desc = FALSE, sum)) %>% 
+  group_by(variety) %>% 
+  mutate(cum_harvest = cumsum(daily_harvest_lb)) %>% 
+  ggplot(aes(x = date, y = cum_harvest, fill = variety)) + 
+  geom_area(position = "stack") + 
+  geom_text(aes(label = variety), 
+            check_overlap = TRUE, 
+            position = "stack") + 
+  labs(title = "Cumulative Harvests of Different Varieties of Tomatos",
+       subtitle = "Date: {frame_along}",
+       x = "Date",
+       y = "Cumulative Harvest (pounds)") +
+  theme(legend.position = "none") + 
+  transition_reveal(date) 
+
+anim_save("garden.gif")  
 ```
 
+```{r, fig.alt= "Animated figure of the cumulative harvest over time of the different varieties of tomatos in Lisa's garden"}
+knitr::include_graphics("garden.gif")
+```
 
 ## Maps, animation, and movement!
 
@@ -225,8 +243,8 @@ mallorca_bike_day7 <- mallorca_bike_day7 %>%
   mutate(mph = ceiling(speed))
 ```
 
-```{r}
-bikeride <- ggmap(mallorca_map) +
+```{r, eval=FALSE}
+ggmap(mallorca_map) +
   geom_point(data = mallorca_bike_day7, 
             aes(x = lon, y = lat, size = mph),
             color = "red") +
@@ -239,13 +257,11 @@ bikeride <- ggmap(mallorca_map) +
   scale_color_viridis_c(option = "magma") + 
   transition_reveal(time) +
   theme_map() 
-```
 
-```{r}
 anim_save("bikeride.gif")
 ```
 
-```{r}
+```{r, fig.alt= "Animated figure of Lisa's bike ride around Mallora changing with time with a red dot, which changes side based on her speed, to show her position at that time and then a line showing her total path, colored to change with the elevation"}
 knitr::include_graphics("bikeride.gif")
 ```
 
@@ -265,8 +281,8 @@ panama_map <- get_stamenmap(
 panama <- bind_rows(panama_swim, panama_bike, panama_run)
 ```
 
-```{r}
-racemap <- ggmap(panama_map) +
+```{r, eval=FALSE}
+ggmap(panama_map) +
   geom_point(data = panama, 
             aes(x = lon, y = lat, color = event), 
             size = 5) +
@@ -278,13 +294,11 @@ racemap <- ggmap(panama_map) +
        color = "Event") + 
   transition_reveal(time) +
   theme_map() 
-```
 
-```{r}
 anim_save("racemap.gif")
 ```
 
-```{r}
+```{r, fig.alt= "Animated figure of Heather's Ironman Race in Panama city with a dot showing her current position, colored to indicate what leg of the race she is on, and a black line to show her total path"}
 knitr::include_graphics("racemap.gif")
 ```
 
@@ -324,7 +338,7 @@ covid_with_2018_pop_est <- covid19_2 %>%
   filter(day == "15")
 ```
 
-```{r}
+```{r, eval=FALSE}
 covidmap <- covid_with_2018_pop_est %>%   
   ggplot() +
   geom_map(map = states_map,
@@ -336,18 +350,16 @@ covidmap <- covid_with_2018_pop_est %>%
   theme_map() +
   theme(legend.background = element_blank()) +
   scale_fill_viridis_c(option = "B", direction = -1) + 
-  transition_time(date)
+  transition_time(date) 
 
-animate(covidmap, 
-        nframe = 200,
-        end_pause = 10)
+animate(covidmap, nframe = 200, end_pause = 10)
 ```
 
 ```{r}
 anim_save("covidmap.gif")
 ```
 
-```{r}
+```{r, fig.alt= "Animated figure of a map of the United States changing over time and colored to indicate the number of COVID cases per 10,000"}
 knitr::include_graphics("covidmap.gif")
 ```
 
@@ -355,11 +367,12 @@ knitr::include_graphics("covidmap.gif")
 
   7. This app will also use the COVID data. Make sure you load that data and all the libraries you need in the `app.R` file you create. You should create a new project for the app, separate from the homework project. Below, you will post a link to the app that you publish on shinyapps.io. You will create an app to compare states' daily number of COVID cases per 100,000 over time. The x-axis will be date. You will have an input box where the user can choose which states to compare (`selectInput()`), a slider where the user can choose the date range, and a submit button to click once the user has chosen all states they're interested in comparing. The graph should display a different line for each state, with labels either on the graph or in a legend. Color can be used if needed. 
   
-Put the link to your app here: 
+Put the link to your app here: [COVID App](https://oliviajarvis24.shinyapps.io/COVIDStateApp/)
   
 ## GitHub link
 
   8. Below, provide a link to your GitHub repo with this set of Weekly Exercises. 
 
+[GitHub Link](https://github.com/ojarvis24/Data-Science-Exercise-5)
 
 **DID YOU REMEMBER TO UNCOMMENT THE OPTIONS AT THE TOP?**
