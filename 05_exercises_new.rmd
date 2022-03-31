@@ -353,9 +353,7 @@ covidmap <- covid_with_2018_pop_est %>%
   transition_time(date) 
 
 animate(covidmap, nframe = 200, end_pause = 10)
-```
 
-```{r}
 anim_save("covidmap.gif")
 ```
 
